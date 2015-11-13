@@ -33,16 +33,19 @@ sim_a = [3.27, 3.92, 4.87, 6.45, 9.52, 18.18, 200]
 # Now planet-to-star radius ratios; from 0.01 to 0.21 in 0.02 steps:
 sim_p = [0.01,0.07,0.13]
 
+# Finally, select the limb-darkening table to use (default is the Kepler+ATLAS one):
+ld_table_name = 'kepler_atlas_lds.dat'
+
 ##################### GET LDS FROM TABLES ############################
 
 # First, get LDs for non-linear law:
-teffs, c1, c2, c3, c4 = Utils.read_ld_table(law = 'non-linear')
+teffs, c1, c2, c3, c4 = Utils.read_ld_table(law = 'non-linear', table_name = ld_table_name)
 
 # Now, get LDs for the selected LD law:
 if ld_law == 'three-param':
-	teffs, coeff1, coeff2, coeff3 = Utils.read_ld_table(law = ld_law)
+	teffs, coeff1, coeff2, coeff3 = Utils.read_ld_table(law = ld_law, table_name = ld_table_name)
 else:
-	teffs, coeff1, coeff2 = Utils.read_ld_table(law = ld_law)
+	teffs, coeff1, coeff2 = Utils.read_ld_table(law = ld_law, table_name = ld_table_name)
 
 ##################### PREPARE OUTPUT FOLDERS #########################
 
