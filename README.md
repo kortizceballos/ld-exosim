@@ -18,7 +18,8 @@ for reference: be sure to use the latest version of D. Kipping's code!
 USAGE
 ------------
 The usage of the code is simple: just define the parameters you woud like to explore in the run_ld_exosim.py 
-code and run it. The results will be saved in a folder named "results" for your simulation. 
+code and run it. The results will be saved in a folder named "results" for your simulation, where the biases 
+for both fixed and free parameters will be stored. 
 
 The code makes use of limb-darkening tables stored in the ld_tables folder. To generate your own, you can 
 use our code in https://github.com/nespinoza/limb-darkening and put the result inside.
