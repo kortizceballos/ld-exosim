@@ -1,12 +1,10 @@
 import numpy as np
 import multiprocessing as mp
 import os
-import pymc
 import pyfits
 import lmfit
 import sys
 
-sys.path.append('../utilities/')
 import Utils
 
 ##################### CUSTOMIZABLE OPTIONS ###########################
@@ -15,7 +13,7 @@ import Utils
 ld_law = 'three-param'
 
 # Define constant values on the simulation (i.e., period, P, time of transit 
-# center, t0, and impact parameter, b, number of points in each transit of 
+# center, t0, and impact parameter, b), number of points in each transit of 
 # the simulation, N, and number of transit to simulate per grid point, n_try:
 P = 1.0
 t0 = 0.0
