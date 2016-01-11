@@ -50,27 +50,27 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
     """
     This function fits transit lightcurves with floating limb-darkening coefficients. Inputs are:
 
-	x:		Times of observation.
+    x:              Times of observation.
 
-	y:		Normalized fluxes
+    y:              Normalized fluxes
 
-	guess_p:	Guess for the planet-to-star radius ratio (R_p/R_*)
+    guess_p:        Guess for the planet-to-star radius ratio (R_p/R_*)
 
-	guess_coeff1:	Guess for the first limb-darkening coefficient.
+    guess_coeff1:   Guess for the first limb-darkening coefficient.
 
-	guess_coeff2:	Same for the second coefficient.
+    guess_coeff2:   Same for the second coefficient.
 
-	guess_coeff3:   Same for third coefficient (if non-linear law is used)
+    guess_coeff3:   Same for third coefficient (if non-linear law is used)
 
-	guess_i:	Guess on the inclination.
+    guess_i:        Guess on the inclination.
 
-	guess_a:	Guess on the scaled semi-major axis (a/R_*)
+    guess_a:        Guess on the scaled semi-major axis (a/R_*)
 
-	P:		Period of the orbit (not fitted).
+    P:              Period of the orbit (not fitted).
 
-	t0:		Time of transit center of the orbit (not fitted).
+    t0:             Time of transit center of the orbit (not fitted).
 
-	ld_law:		Limb-darkening law to use for the fit.
+    ld_law:         Limb-darkening law to use for the fit.
 
     The function returns the fitted values of p,i,a and the coefficients of the chosen LD law.
     """
@@ -80,8 +80,8 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
                 batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
                                              [guess_coeff1, guess_coeff2,guess_coeff3], ld_law = ld_law)
     else:
-    		batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
-                		             [guess_coeff1, guess_coeff2], ld_law = ld_law)
+                batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
+                                             [guess_coeff1, guess_coeff2], ld_law = ld_law)
 
     # Define the residual functions depending on the LD law used:
     def residuals_quadratic(params, x, y):
@@ -113,7 +113,7 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
         coeff1 = 1.-np.sqrt(params['q1'].value)*params['q2'].value
         coeff2 = 1.-np.sqrt(params['q1'].value)
 
-	batman_params.rp = params['p'].value
+        batman_params.rp = params['p'].value
         batman_params.a = params['a'].value
         batman_params.inc = params['i'].value
         batman_params.u = [coeff1,coeff2]
@@ -124,7 +124,7 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
 
         c = LDC3.forward([params['q1'].value,params['q2'].value, params['q3'].value])
 
-	if LDC3.criteriatest(0,c) == 0:
+        if LDC3.criteriatest(0,c) == 0:
            c = [guess_coeff1, guess_coeff2, guess_coeff3]
 
         batman_params.rp = params['p'].value
@@ -141,12 +141,12 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
         guess_q2 = (guess_coeff1)/(2.*(guess_coeff1+guess_coeff2))
 
     elif ld_law == 'squareroot':
-	guess_q1 = (guess_coeff1 + guess_coeff2)**2
-	guess_q2 = (guess_coeff2)/(2.*(guess_coeff1+guess_coeff2))
+        guess_q1 = (guess_coeff1 + guess_coeff2)**2
+        guess_q2 = (guess_coeff2)/(2.*(guess_coeff1+guess_coeff2))
 
     elif ld_law == 'logarithmic':
-    	guess_q1 = (1.-guess_coeff2)**2
-    	guess_q2 = (1.-guess_coeff1)/(1.-guess_coeff2)
+        guess_q1 = (1.-guess_coeff2)**2
+        guess_q2 = (1.-guess_coeff1)/(1.-guess_coeff2)
 
     elif ld_law == 'three-param':
         guess_q1,guess_q2,guess_q3 = LDC3.inverse([guess_coeff1,guess_coeff2,guess_coeff3])
@@ -166,19 +166,19 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
 
     # Run lmfit for the corresponding ld-law:
     if ld_law == 'quadratic':
-	result = lmfit.minimize(residuals_quadratic, prms, args=(x,y))
+        result = lmfit.minimize(residuals_quadratic, prms, args=(x,y))
         coeff1out = 2.*np.sqrt(prms['q1'].value)*prms['q2'].value
         coeff2out = np.sqrt(prms['q1'].value)*(1.-2.*prms['q2'].value)
 
     elif ld_law == 'squareroot':
-	result = lmfit.minimize(residuals_sqroot, prms, args=(x,y))
+        result = lmfit.minimize(residuals_sqroot, prms, args=(x,y))
         coeff1out = np.sqrt(prms['q1'].value)*(1.-2.*prms['q2'].value)
         coeff2out = 2.*np.sqrt(prms['q1'].value)*prms['q2'].value
 
     elif ld_law == 'logarithmic':
-	result = lmfit.minimize(residuals_logarithmic, prms, args=(x,y))
-    	coeff1out = 1.-np.sqrt(prms['q1'].value)*prms['q2'].value
-    	coeff2out = 1.-np.sqrt(prms['q1'].value)
+        result = lmfit.minimize(residuals_logarithmic, prms, args=(x,y))
+        coeff1out = 1.-np.sqrt(prms['q1'].value)*prms['q2'].value
+        coeff2out = 1.-np.sqrt(prms['q1'].value)
 
     elif ld_law == 'three-param':
         result = lmfit.minimize(residuals_three_param, prms, args=(x,y))
@@ -268,29 +268,28 @@ def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0
 ################### READING OF LD DATA ###################################
 
 def read_ld_table(law, table_name = 'espinoza_table.dat'):	
-	if law == 'linear':
-		teff,a = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,7))
-		return teff,a
-	if law == 'quadratic':
-		teff,u1,u2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,8,9))
-		return teff,u1,u2
-	if law == 'three-param':
-		teff,b1,b2,b3 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,10,11,12))
-		return teff,b1,b2,b3
-	if law == 'non-linear':
-		teff,c1,c2,c3,c4 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,13,14,15,16))
-		return teff,c1,c2,c3,c4
-	if law == 'logarithmic':
-		teff,l1,l2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,17,18))
-		return teff,l1,l2
-	if law == 'exponential':
-		teff,e1,e2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,19,20))
-		return teff,e1,e2
-	if law == 'squareroot':
-		teff,s1,s2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,21,22))
-		return teff,s1,s2
+    if law == 'linear':
+        teff,a = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,7))
+        return teff,a
+    if law == 'quadratic':
+        teff,u1,u2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,8,9))
+        return teff,u1,u2
+    if law == 'three-param':
+        teff,b1,b2,b3 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,10,11,12))
+        return teff,b1,b2,b3
+    if law == 'non-linear':
+        teff,c1,c2,c3,c4 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,13,14,15,16))
+        return teff,c1,c2,c3,c4
+    if law == 'logarithmic':
+        teff,l1,l2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,17,18))
+        return teff,l1,l2
+    if law == 'exponential':
+        teff,e1,e2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,19,20))
+        return teff,e1,e2
+    if law == 'squareroot':
+        teff,s1,s2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,21,22))
+        return teff,s1,s2
 
-	print 'Limb-darkening law '+law+' not supported.' 
-	sys.exit()
-
+    print 'Limb-darkening law '+law+' not supported.' 
+    sys.exit()
 
