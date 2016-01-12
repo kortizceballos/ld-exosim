@@ -93,7 +93,6 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
         batman_params.a = params['a'].value
         batman_params.inc = params['i'].value
         batman_params.u = [coeff1,coeff2]
-
         return y - batman_m.light_curve(batman_params)
 
     def residuals_sqroot(params, x, y):
@@ -167,31 +166,31 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
     # Run lmfit for the corresponding ld-law:
     if ld_law == 'quadratic':
         result = lmfit.minimize(residuals_quadratic, prms, args=(x,y))
-        coeff1out = 2.*np.sqrt(prms['q1'].value)*prms['q2'].value
-        coeff2out = np.sqrt(prms['q1'].value)*(1.-2.*prms['q2'].value)
+        coeff1out = 2.*np.sqrt(result.params['q1'].value)*result.params['q2'].value
+        coeff2out = np.sqrt(result.params['q1'].value)*(1.-2.*result.params['q2'].value)
 
     elif ld_law == 'squareroot':
         result = lmfit.minimize(residuals_sqroot, prms, args=(x,y))
-        coeff1out = np.sqrt(prms['q1'].value)*(1.-2.*prms['q2'].value)
-        coeff2out = 2.*np.sqrt(prms['q1'].value)*prms['q2'].value
+        coeff1out = np.sqrt(result.params['q1'].value)*(1.-2.*result.params['q2'].value)
+        coeff2out = 2.*np.sqrt(result.params['q1'].value)*result.params['q2'].value
 
     elif ld_law == 'logarithmic':
         result = lmfit.minimize(residuals_logarithmic, prms, args=(x,y))
-        coeff1out = 1.-np.sqrt(prms['q1'].value)*prms['q2'].value
-        coeff2out = 1.-np.sqrt(prms['q1'].value)
+        coeff1out = 1.-np.sqrt(result.params['q1'].value)*result.params['q2'].value
+        coeff2out = 1.-np.sqrt(result.params['q1'].value)
 
     elif ld_law == 'three-param':
         result = lmfit.minimize(residuals_three_param, prms, args=(x,y))
-        coeff1out, coeff2out, coeff3out = LDC3.forward([prms['q1'].value,\
-                                          prms['q2'].value,prms['q3'].value])
+        coeff1out, coeff2out, coeff3out = LDC3.forward([result.params['q1'].value,\
+                                          result.params['q2'].value,result.params['q3'].value])
 
     # If the fit is successful, return fitted parameters. If not, raise an
     # message and end the program:
     if result.success:
        if ld_law == 'three-param':
-          return prms['p'].value, coeff1out, coeff2out, coeff3out, prms['i'].value, prms['a'].value
+          return result.params['p'].value, coeff1out, coeff2out, coeff3out, result.params['i'].value, result.params['a'].value
        else:
-          return prms['p'].value, coeff1out, coeff2out, prms['i'].value, prms['a'].value
+          return result.params['p'].value, coeff1out, coeff2out, result.params['i'].value, result.params['a'].value
     else:
        print 'Unsuccessful fit'
        print guess_p, guess_coeff1, guess_coeff2, guess_i, guess_a, P, t0, ld_law
@@ -259,7 +258,7 @@ def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0
     # If the fit is successful, return fitted parameters. If not, raise an
     # message and end the program:
     if result.success:
-       return prms['p'].value, prms['i'].value, prms['a'].value
+       return result.params['p'].value, result.params['i'].value, result.params['a'].value
     else:
        print 'Unsuccessful fit'
        print guess_p, guess_i, guess_a, P, t0, ld_law
