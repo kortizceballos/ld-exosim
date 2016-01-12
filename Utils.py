@@ -26,7 +26,11 @@ def init_batman(times, Period, inclination, a, p, t0, ld_coeffs, e=0.0, omega=0.
     params.inc = inclination
     params.ecc = e
     params.w = omega
-    if ld_law == 'quadratic':
+    if ld_law == 'linear':
+       params.u = [ld_coeffs[0]]
+       params.limb_dark = ld_law
+       m = batman.TransitModel(params, times)
+    elif ld_law == 'quadratic':
        params.u = [ld_coeffs[0],ld_coeffs[1]]
        params.limb_dark = ld_law
        m = batman.TransitModel(params, times)
@@ -58,7 +62,7 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
 
     guess_coeff1:   Guess for the first limb-darkening coefficient.
 
-    guess_coeff2:   Same for the second coefficient.
+    guess_coeff2:   Same for the second coefficient (not used if law is linear).
 
     guess_coeff3:   Same for third coefficient (if non-linear law is used)
 
@@ -76,7 +80,10 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
     """
 
     # First, initialize the batman transit modeller with guess parameters:
-    if ld_law == 'three-param':
+    if ld_law == 'linear':
+                batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
+                                             [guess_coeff1], ld_law = ld_law)
+    elif ld_law == 'three-param':
                 batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
                                              [guess_coeff1, guess_coeff2,guess_coeff3], ld_law = ld_law)
     else:
@@ -84,6 +91,14 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
                                              [guess_coeff1, guess_coeff2], ld_law = ld_law)
 
     # Define the residual functions depending on the LD law used:
+    def residuals_linear(params, x, y):
+
+        batman_params.rp = params['p'].value
+        batman_params.a = params['a'].value
+        batman_params.inc = params['i'].value
+        batman_params.u = [params['q1'].value]
+        return y - batman_m.light_curve(batman_params)
+    
     def residuals_quadratic(params, x, y):
 
         coeff1 = 2.*np.sqrt(params['q1'].value)*params['q2'].value
@@ -135,7 +150,10 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
 
     # Define the initial values of the q_i parameters with 
     # the initial guesses of the coefficients:
-    if ld_law == 'quadratic':
+    if ld_law == 'linear':
+        guess_q1 = guess_coeff1
+
+    elif ld_law == 'quadratic':
         guess_q1 = (guess_coeff1 + guess_coeff2)**2
         guess_q2 = (guess_coeff1)/(2.*(guess_coeff1+guess_coeff2))
 
@@ -149,11 +167,13 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
 
     elif ld_law == 'three-param':
         guess_q1,guess_q2,guess_q3 = LDC3.inverse([guess_coeff1,guess_coeff2,guess_coeff3])
+
     # Init lmfit
     prms = lmfit.Parameters()
     prms.add('p', value = guess_p, min = 0, vary = True)
     prms.add('q1', value = guess_q1, min = 0, max = 1, vary = True)
-    prms.add('q2', value = guess_q2, min = 0, max = 1, vary = True)
+    if ld_law != 'linear':
+       prms.add('q2', value = guess_q2, min = 0, max = 1, vary = True)
     if ld_law == 'three-param':
        prms.add('q3', value = guess_q2, min = 0, max = 1, vary = True)
     prms.add('i', value = guess_i, min = 0, max = 90, vary = True)
@@ -164,7 +184,11 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
        prms.add('a', expr = 'b/cos(i * pi/180.0)')
 
     # Run lmfit for the corresponding ld-law:
-    if ld_law == 'quadratic':
+    if ld_law == 'linear':
+        result = lmfit.minimize(residuals_linear, prms, args=(x,y))
+        coeff1out = result.params['q1'].value
+
+    elif ld_law == 'quadratic':
         result = lmfit.minimize(residuals_quadratic, prms, args=(x,y))
         coeff1out = 2.*np.sqrt(result.params['q1'].value)*result.params['q2'].value
         coeff2out = np.sqrt(result.params['q1'].value)*(1.-2.*result.params['q2'].value)
@@ -187,7 +211,9 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
     # If the fit is successful, return fitted parameters. If not, raise an
     # message and end the program:
     if result.success:
-       if ld_law == 'three-param':
+       if ld_law == 'linear':
+          return result.params['p'].value, coeff1out,  result.params['i'].value, result.params['a'].value
+       elif ld_law == 'three-param':
           return result.params['p'].value, coeff1out, coeff2out, coeff3out, result.params['i'].value, result.params['a'].value
        else:
           return result.params['p'].value, coeff1out, coeff2out, result.params['i'].value, result.params['a'].value
@@ -206,9 +232,9 @@ def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0
 
         guess_p:        Guess for the planet-to-star radius ratio (R_p/R_*)
 
-        coeff1:   	First fixed limb-darkening coefficient.
+        coeff1:   	    First fixed limb-darkening coefficient.
 
-        coeff2:  	Same for the second coefficient.
+        coeff2:  	    Same for the second coefficient (not used if law is linear).
 
         coeff3:         Same for third coefficient (if non-linear law is used)
 
@@ -226,7 +252,10 @@ def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0
     """
 
     # First, initialize the batman transit modeller with guess parameters:
-    if ld_law == 'three-param':
+    if ld_law == 'linear':
+                batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
+                                             [coeff1], ld_law = ld_law)
+    elif ld_law == 'three-param':
                 batman_params,batman_m = init_batman(x, P, guess_i, guess_a, guess_p, t0, \
                                              [coeff1, coeff2, coeff3], ld_law = ld_law)
     else:

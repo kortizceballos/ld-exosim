@@ -22,7 +22,7 @@ N = 1000
 n_try = 100
 
 # Define number of cores to use:
-ncores = 5
+ncores = 1
 
 # Define the grid to explore; first, scaled semi-major axes (same as in 
 # Espinoza & Jordan, 2015):
@@ -40,7 +40,7 @@ ld_table_name = 'kepler_atlas_lds.dat'
 teffs, c1, c2, c3, c4 = Utils.read_ld_table(law = 'non-linear', table_name = ld_table_name)
 
 # Now, get LDs for the selected LD law:
-if ld_law == 'three-param':
+if ld_law == 'linear':
     teffs, coeff1 = Utils.read_ld_table(law = ld_law, table_name = ld_table_name)
 elif ld_law == 'three-param':
     teffs, coeff1, coeff2, coeff3 = Utils.read_ld_table(law = ld_law, table_name = ld_table_name)
@@ -120,24 +120,34 @@ def run_simulations(counter):
             # Save the transit:
             pyfits.PrimaryHDU(transit).writeto(output_folder+'/grid_files_'+str(counter)+\
                                                '/transit_teff_'+str(teffs[j])+'_ntry_'+str(i)+'.fits')    
-            # Fit it using fixed two-parameter limb-darkening coefficients:
-            if ld_law == 'three-param':
+            # Fit it using fixed limb-darkening coefficients:
+            if ld_law == 'linear':
+                p_lsq, i_lsq, a_lsq = Utils.fit_transit_fixed_lds(t, transit, p, coeff1[j], 0.0, inclination, a, P, t0, ld_law)
+                params_lsq,m_lsq = Utils.init_batman(t,P,i_lsq,a_lsq,p_lsq,t0,[coeff1[j]],ld_law = ld_law)
+            elif ld_law == 'three-param':
                 p_lsq, i_lsq, a_lsq = Utils.fit_transit_fixed_lds(t, transit, p, coeff1[j], coeff2[j], inclination, a, P, t0, ld_law, coeff3 = coeff3[j])
                 params_lsq,m_lsq = Utils.init_batman(t,P,i_lsq,a_lsq,p_lsq,t0,[coeff1[j],coeff2[j],coeff3[j]],ld_law = ld_law) 
             else:
                 p_lsq, i_lsq, a_lsq = Utils.fit_transit_fixed_lds(t, transit, p, coeff1[j], coeff2[j], inclination, a, P, t0, ld_law)
                 params_lsq,m_lsq = Utils.init_batman(t,P,i_lsq,a_lsq,p_lsq,t0,[coeff1[j],coeff2[j]],ld_law = ld_law)
+
             # Save the fitted parameters:
             pfixed.append(np.copy(p_lsq))
             afixed.append(np.copy(a_lsq))
             ifixed.append(np.copy(i_lsq))
+
             # Save best-fit transit with fixed LDs:
             best_fit_transit_fixed = m_lsq.light_curve(params_lsq)
             pyfits.PrimaryHDU(best_fit_transit_fixed).writeto(output_folder+'/grid_files_'+str(counter)+\
                                                               '/best_fit_fixed_transit_teff_'+str(teffs[j])+'_ntry_'+str(i)+'.fits')
 
             # Now fit with free LD coefficients:
-            if ld_law == 'three-param':
+            if ld_law == 'linear':
+                p_lsq2, coeff1_lsq2, i_lsq2, a_lsq2 = Utils.fit_transit_floating_lds(t, transit, p, coeff1[j], \
+                                                                                     None, inclination, a, P, t0, ld_law)
+                params_lsq2,m_lsq2 = Utils.init_batman(t,P,i_lsq2,a_lsq2,p_lsq2,t0,[coeff1_lsq2],ld_law = ld_law)
+                ld_coeffs_file.write(str(coeff1_lsq2)+'\t'+str(coeff1[j])+'\n')
+            elif ld_law == 'three-param':
                 p_lsq2, coeff1_lsq2, coeff2_lsq2, coeff3_lsq2, i_lsq2, a_lsq2 = Utils.fit_transit_floating_lds(t, transit, p, coeff1[j], \
                                                                                         coeff2[j], inclination, a, P, t0, ld_law, guess_coeff3 = coeff3[j])
                 params_lsq2,m_lsq2 = Utils.init_batman(t,P,i_lsq2,a_lsq2,p_lsq2,t0,[coeff1_lsq2,coeff2_lsq2,coeff3_lsq2],ld_law = ld_law)
