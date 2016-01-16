@@ -15,7 +15,7 @@ import Utils
 ld_laws = ['linear','quadratic','logarithmic','squareroot','three-param']
 
 # Define number of in-transit points in each transit simulation:
-N = 1000
+N = 300
 # Number of transits to simulate:
 n_try = 300
 
@@ -31,12 +31,13 @@ a = 10.0
 p = 0.1
 
 # Define stellar parameters for the simulations:
-Teff = 5500.
+Teff = 5500.   # Temperature in K
+logg = 4.5     # Log-gravity (dex/cgs)
+feh = 0.0      # Metallicity 
+vturb = 2.0    # Microturbulent velocity (km/s)
 
-# Define number of cores to use:
-ncores = 1
-
-# Finally, select the limb-darkening table to use (default is the Kepler+ATLAS one):
+# Finally, select the limb-darkening table to use (default is the Kepler+ATLAS one,
+# but you can generate your own from here: https://github.com/nespinoza/limb-darkening):
 ld_table_name = 'kepler_atlas_lds.dat'
 
 ##################### GET LDS FROM TABLES ############################
@@ -47,7 +48,8 @@ print '\t    Author: Nestor Espinoza (nsespino@uc.cl)'
 # First, get LDs for each law:
 lds = {}
 for ld_law in (ld_laws + ['non-linear']):
-    lds[ld_law] = Utils.read_ld_table(law = ld_law, input_teff = Teff, table_name = ld_table_name)
+    lds[ld_law] = Utils.read_ld_table(law = ld_law, input_teff = Teff, input_logg = logg, \
+                                      input_feh = feh, input_vturb = vturb, table_name = ld_table_name)
 
 ##################### PREPARE OUTPUT FOLDERS #########################
 

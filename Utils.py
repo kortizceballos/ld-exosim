@@ -218,9 +218,13 @@ def fit_transit_floating_lds(x, y, guess_p, guess_coeff1, guess_coeff2, guess_i,
        else:
           return result.params['p'].value, coeff1out, coeff2out, result.params['i'].value, result.params['a'].value
     else:
-       print 'Unsuccessful fit'
-       print guess_p, guess_coeff1, guess_coeff2, guess_i, guess_a, P, t0, ld_law
-       sys.exit()
+       print 'Unsuccessful fit for LD law',ld_law
+       if ld_law == 'linear':
+          return guess_p, guess_coeff1,  guess_i, guess_a
+       elif ld_law == 'three-param':
+          return guess_p, guess_coeff1, guess_coeff2, guess_coeff3, guess_i, guess_a
+       else:
+          return guess_p, guess_coeff1, guess_coeff2, guess_i, guess_a
 
 def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0, ld_law, coeff3 = None):
     """
@@ -289,34 +293,96 @@ def fit_transit_fixed_lds(x, y, guess_p, coeff1, coeff2, guess_i, guess_a, P, t0
     if result.success:
        return result.params['p'].value, result.params['i'].value, result.params['a'].value
     else:
-       print 'Unsuccessful fit'
-       print guess_p, guess_i, guess_a, P, t0, ld_law
-       sys.exit()
+       print 'Unsuccessful fit for LD law',ld_law
+       return guess_p, guess_i, guess_a
 
 ################### READING OF LD DATA ###################################
+def closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb):
+    if input_teff is None:
+        idx_teff = (np.where(teff == 5500.)[0])[0]
+    else:
+        min_dist_teff = np.min(np.abs(teff-input_teff))
+        idx_teff = np.where(np.abs(teff-input_teff) == min_dist_teff)[0]
+        if len(idx_teff)>1:
+           idx_teff = idx_teff[0]
+    min_dist_logg = np.min(np.abs(logg-input_logg))
+    idx_logg = np.where(np.abs(logg-input_logg) == min_dist_logg)[0]
+    if len(idx_logg)>1:
+       idx_logg = idx_logg[0]  
+    min_dist_feh = np.min(np.abs(feh-input_feh))
+    idx_feh = np.where(np.abs(feh-input_feh) == min_dist_feh)[0]
+    if len(idx_feh)>1:
+       idx_feh = idx_feh[0]
+    min_dist_vturb = np.min(np.abs(vturb-input_vturb))
+    idx_vturb = np.where(np.abs(vturb-input_vturb) == min_dist_vturb)[0]
+    if len(idx_vturb)>1:
+       idx_vturb = idx_vturb[0]
+    return teff[idx_teff],logg[idx_logg],feh[idx_feh],vturb[idx_vturb]
 
-def read_ld_table(law, table_name = 'espinoza_table.dat'):	
+def read_ld_table(law, input_teff = None, input_logg = 4.5, input_feh = 0.0, input_vturb = 2.0, max_teff = 9000., table_name = 'kepler_atlas_lds.dat'):
     if law == 'linear':
-        teff,a = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,7))
-        return teff,a
+        teff,logg,feh,vturb,a = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,7))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],a[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [a[idx]]
     if law == 'quadratic':
-        teff,u1,u2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,8,9))
-        return teff,u1,u2
+        teff,logg,feh,vturb,u1,u2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,8,9))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],u1[idx],u2[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [u1[idx],u2[idx]]
     if law == 'three-param':
-        teff,b1,b2,b3 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,10,11,12))
-        return teff,b1,b2,b3
+        teff,logg,feh,vturb,b1,b2,b3 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,10,11,12))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],b1[idx],b2[idx],b3[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [b1[idx],b2[idx],b3[idx]]
     if law == 'non-linear':
-        teff,c1,c2,c3,c4 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,13,14,15,16))
-        return teff,c1,c2,c3,c4
+        teff,logg,feh,vturb,c1,c2,c3,c4 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,13,14,15,16))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],c1[idx],c2[idx],c3[idx],c4[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [c1[idx],c2[idx],c3[idx],c4[idx]]
     if law == 'logarithmic':
-        teff,l1,l2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,17,18))
-        return teff,l1,l2
+        teff,logg,feh,vturb,l1,l2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,17,18))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],l1[idx],l2[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [l1[idx],l2[idx]]
     if law == 'exponential':
-        teff,e1,e2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,19,20))
-        return teff,e1,e2
+        teff,logg,feh,vturb,e1,e2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,19,20))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return teff[idx],e1[idx],e2[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [e1[idx],e2[idx]]
     if law == 'squareroot':
-        teff,s1,s2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,21,22))
-        return teff,s1,s2
+        teff,logg,feh,vturb,s1,s2 = np.loadtxt('lds_tables/'+table_name,unpack=True,usecols=(3,4,5,6,21,22))
+        in_teff,input_logg,input_feh,input_vturb = closest_stellar_params(teff,logg,feh,vturb,input_teff,input_logg,input_feh,input_vturb)
+        if input_teff is None:
+            idx = np.where((teff < max_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]  
+            return teff[idx],s1[idx],s2[idx]
+        else:
+            idx = np.where((teff == in_teff)&(logg == input_logg)&(feh == input_feh)&(vturb == input_vturb))[0]
+            return [s1[idx],s2[idx]]
 
     print 'Limb-darkening law '+law+' not supported.' 
     sys.exit()
