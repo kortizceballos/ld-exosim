@@ -21,14 +21,14 @@ USAGE
 ------------
 The usage of the code is simple, depending on what you want to do:
 
-1. Do you want to know which law to use in a given application?
+1. **Do you want to know which law to use in a given application?**
 
    You are looking for the `which_law_should_i_use.py` code. Simply modify 
    the parameters inside the code and let the simulations run. At the end, 
    the code will print out the Bias/Precision values for each law so you can 
    select the optimal one for your application.
 
-2. You want to perform bias simulations for several transit parameters?
+2. **You want to perform bias simulations for several transit parameters?**
    Then you want to use the `run_ld_exosim.py` code. In the code just define 
    the parameters you woud like to explore and run it. The results will be 
    saved in a folder named "results" for your simulation, where the biases 
