@@ -198,19 +198,22 @@ for precision in precisions:
                         str(bias_float_a)+'\t'+str(precision_float_a)+'\t'+ 
                         str(bias_float_i)+'\t'+str(precision_float_i)+'\n')
         print '\t Planet-to-star radius ratio (p = Rp/Rs):'    
-        print '\t Bias:      ',bias_float_p
-        print '\t Precision: ',precision_float_p
-        print '\t Bias/Precision: ',np.abs(bias_float_p/precision_float_p)
+        print '\t Bias:                ',bias_float_p
+        print '\t sqrt(Variance):      ',precision_float_p
+        print '\t Bias/sqrt(Variance): ',np.abs(bias_float_p/precision_float_p)
+        print '\t MSE:                 ',(bias_float_p**2 + precision_float_p**2)
         print ''
         print '\t Scaled semi-major axis (a=a/Rs):'
-        print '\t Bias:      ',bias_float_a
-        print '\t Precision: ',precision_float_a
-        print '\t Bias/Precision: ',np.abs(bias_float_a/precision_float_a)
+        print '\t Bias:                ',bias_float_a
+        print '\t sqrt(Variance):      ',precision_float_a
+        print '\t Bias/sqrt(Variance): ',np.abs(bias_float_a/precision_float_a)
+        print '\t MSE:                 ',bias_float_a**2+precision_float_a**2
         print ''
         print '\t Inclination (degrees, i):'
-        print '\t Bias:      ',bias_float_i
-        print '\t Precision: ',precision_float_i
-        print '\t Bias/Precision: ',np.abs(bias_float_i/precision_float_i)
+        print '\t Bias:                ',bias_float_i
+        print '\t sqrt(Variance):      ',precision_float_i
+        print '\t Bias/sqrt(Variance): ',np.abs(bias_float_i/precision_float_i)
+        print '\t MSE:                 ',bias_float_i**2 + precision_float_i**2
         print '\t ------------------------------'
         print ''
     fout.close()
