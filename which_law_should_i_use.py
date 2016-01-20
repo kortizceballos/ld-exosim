@@ -17,24 +17,23 @@ ld_laws = ['linear','quadratic','logarithmic','squareroot','three-param']
 # Define number of in-transit points in each transit simulation:
 N = 100
 # Number of transits to simulate:
-n_try = 100
+n_try = 300
 
 # Precisions (in ppm) of the lightcurves to be simulated (can be just one):
-precisions = [281.]#[10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,200.,300.,400.,500.,\
-             # 600.,700.,800.,900.,1000.,2000.,3000.]
+precisions = [10.,20.,30.,40.,50.,60.,70.,80.,90.,100.,200.,300.,400.,500.,\
+              600.,700.,800.,900.,1000.,2000.,3000.]
 
 # Define transit parameters for the simulations:
-P = 4.09
-t0 = 0.0
-b = 0.66
-a = 11.89
-p = 0.124
+P = 1.0
+b = 0.3
+a = 10.0
+p = 0.1
 
 # Define stellar parameters for the simulations:
-Teff = 5400.   # Temperature in K
-logg = 4.9     # Log-gravity (dex/cgs)
-feh = 0.5    # Metallicity 
-vturb = 4.0    # Microturbulent velocity (km/s)
+Teff = 5500.   # Temperature in K
+logg = 4.5     # Log-gravity (dex/cgs)
+feh = 0.0    # Metallicity 
+vturb = 2.0    # Microturbulent velocity (km/s)
 
 # Finally, select the limb-darkening table to use (default is the Kepler+ATLAS one,
 # but you can generate your own from here: https://github.com/nespinoza/limb-darkening):
@@ -62,6 +61,7 @@ if not os.path.exists('results/sic'):
 # Calculate the inclination:
 inclination = np.arccos(b/a)*180./np.pi
 
+t0 = 0.0
 for precision in precisions:
     output_folder = 'results/sic/N_'+str(N)+'_precision_'+str(precision)
     if not os.path.exists(output_folder):

@@ -1,7 +1,7 @@
 # ld-exosim
 
-This repository stores codes to (1) select the optimal (i.e. higher precision among all the 
-low-bias) limb-darkening law for a given transiting exoplanet lightcurve and (2) calculate 
+This repository stores codes to (1) select the optimal (i.e. best estimator in a MSE 
+sense) limb-darkening law for a given transiting exoplanet lightcurve and (2) calculate 
 the limb-darkening induced biases on various exoplanet parameters. The details of the codes 
 are explained in Espinoza & Jordán (2016). 
 
