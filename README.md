@@ -29,6 +29,7 @@ The usage of the code is simple, depending on what you want to do:
    select the optimal one for your application.
 
 2. **You want to perform bias simulations for several transit parameters?**
+
    Then you want to use the `run_ld_exosim.py` code. In the code just define 
    the parameters you woud like to explore and run it. The results will be 
    saved in a folder named "results" for your simulation, where the biases 
