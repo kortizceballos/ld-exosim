@@ -2,8 +2,11 @@
 
 This repository stores codes to (1) select the optimal (i.e. best estimator in a MSE 
 sense) limb-darkening law for a given transiting exoplanet lightcurve and (2) calculate 
-the limb-darkening induced biases on various exoplanet parameters. The details of the codes 
-are explained in Espinoza & Jordán (2016). 
+the limb-darkening induced biases on various exoplanet parameters. 
+
+The details of the codes are explained in Espinoza & Jordán (2016, MNRAS, in press.; 
+arXiv e-print: http://arxiv.org/abs/1601.05485). Source code of the paper (including 
+generation of all figures): https://github.com/nespinoza/lds_which_law_2_use. 
 
 DEPENDENCIES
 ------------
